@@ -33,26 +33,44 @@ def resize_and_show(image):
   else:
     img = cv2.resize(image, (math.floor(w/(h/DESIRED_HEIGHT)), DESIRED_HEIGHT))
   cv2.imshow("", img)
-  #cv2.waitKey(0)
+  cv2.waitKey(0)
+
+
 
 
     
 if __name__ == "__main__":
     
-    model_path = "efficientnet_lite0.tflite"
-    
+    # STEP 2: Create an ImageClassifier object.
+    base_options = python.BaseOptions(model_asset_path='efficientnet_lite0.tflite')
+    options = vision.ImageClassifierOptions(
+        base_options=base_options, max_results=4)
+    classifier = vision.ImageClassifier.create_from_options(options)
+
     #directory = input("Enter directory to search: ").strip()
     directory = "C:\\Users\\alexv\\workspace"
+    directory = "C:\\Users\\alexv\\OneDrive\\Pictures"
     if not os.path.isdir(directory):
         print("Invalid directory.")
     else:
         images = find_images(directory)
         print(f"\nFound {len(images)} image(s):\n")
+        i = 0
         for img_name in images:
-            print(img_name)
-            image = cv2.imread(img_name)
-            resize_and_show(image)
-
+            i += 1
+            print(f"{i} {img_name}")
+            if i < 100:
+                try:
+                    #Classify the input image.
+                    image = cv2.imread(img_name)
+                    mp_image = mp.Image.create_from_file(img_name)
+                    classification_result = classifier.classify(mp_image)
+                    top_category = classification_result.classifications[0].categories[0]
+                    print(f"{top_category.category_name} ({top_category.score:.2f})")
+                    resize_and_show(image)
+                except RuntimeError:
+                    print(f"Error reading {img_name}")
+            
     cv2.destroyAllWindows()
 
             
